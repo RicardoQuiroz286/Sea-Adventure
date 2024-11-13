@@ -1,0 +1,16 @@
+# Configuración global
+
+NEGRO = (0, 0, 0)
+W, H = 1200, 600
+
+BLANCO = (255, 255, 255)
+NAVY_BLUE = (22, 68, 136)
+AZULL = (210, 206, 237)
+NARANJA = (255, 102, 0)
+AZUL = (18, 48, 74)
+BEIGE = (219, 179, 134)
+AMARILLO = (223, 252, 3)
+LIMA = (99, 245, 2)
+LIGHT_BLUE = (148, 234, 255)
+
+EASYGREEN = (65, 176, 9)
