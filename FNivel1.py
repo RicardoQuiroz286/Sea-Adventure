@@ -4,6 +4,7 @@ from personaje import Enemigo, Oxigeno, Jugador, Tortuga, Liberar  # Importa las
 from constantes import *  # Importa las variables desde config.py
 from musica import cargar_musica_fondo, gestionar_audio, reproducir_sonido_colision_tortuga, reproducir_sonido_oxigeno, reproducir_sonido_colision_enemigo  # Importa las funciones de audio
 x = 0
+#hola
 
 def easy1():
 
