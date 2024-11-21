@@ -75,9 +75,18 @@ backimg = pygame.image.load("imagenes/back.png")
 backimg = pygame.transform.scale(backimg, (45,45))
 creimg = pygame.image.load("imagenes/user.png")
 creimg = pygame.transform.scale(creimg, (47,47))
-easyone = pygame.image.load("imagenes/tortuga/tortuga1.png")
-easyone = pygame.transform.scale(easyone, (55,48))
-
+easyone = pygame.image.load("imagen/tortuga/tortugacapturada1.png")
+easyone = pygame.transform.scale(easyone, (90,90))
+easytwo = pygame.image.load("imagen/foca/foca_capturada1.png")
+easytwo = pygame.transform.scale(easytwo, (110,90))
+easythree = pygame.image.load("imagen/delfin/delfincapturado.png")
+easythree = pygame.transform.scale(easythree, (120,70))
+hardone = pygame.image.load("imagen/tortuga/tortugacapturada1.png")
+hardone = pygame.transform.scale(easyone, (90,90))
+hardtwo = pygame.image.load("imagen/foca/foca_capturada1.png")
+hardtwo = pygame.transform.scale(easytwo, (110,90))
+hardthree = pygame.image.load("imagen/delfin/delfincapturado.png")
+hardthree = pygame.transform.scale(easythree, (120,70))
 
 # Fuentes
 buttonfont = pygame.font.Font("fuentes/Springwood Display DEMO.otf", 40)
@@ -95,7 +104,7 @@ tttext = ttfont.render("ADVENTURE", True, AZULL)
 difftext = titlefont.render("DIFICULTAD", True, AMARILLO)
 levelstext = titlefont.render("NIVELES", True, LIGHT_BLUE)
 lengtext = titlefont.render("IDIOMAS", True, BLANCO)
-abouttext = titlefont.render("CREDITOS", True, BLANCO)
+abouttext = titlefont.render("DESARROLLADORES", True, BLANCO)
 ctltext = titlefont.render("Controles", True, BLANCO)
 overtext = titlefont.render("GAME OVER", True, BLANCO)
 
@@ -110,7 +119,6 @@ pygame.mixer.music.set_volume(0.25)
  
 #SONIDO DE BOTONES
 click_sound = pygame.mixer.Sound('sonidos/clickss.mp3')
-
 
 
 
@@ -230,7 +238,7 @@ def lenscreen():
                            font=buttonfont, base_color=BLANCO, hovering_color=NAVY_BLUE, draw_border=True )
         engbutton = Button(image=buttoneng, pos=(750, 250), text_input="",
                            font=buttonfont, base_color=BLANCO, hovering_color=NAVY_BLUE, draw_border=True)
-        aboutbutton = Button(image=button_surface, pos=(600, 400), text_input="Crèditos", additional_image=creimg,
+        aboutbutton = Button(image=button_surface, pos=(600, 400), text_input="Desarrolladores", additional_image=creimg,
                              font=buttonfont, base_color=BLANCO, hovering_color=NAVY_BLUE)
         diffback_button = Button(image=button_surface, pos=(600, 500), text_input="Regresar", additional_image=backimg,
                                   font=buttonfont, base_color=BLANCO, hovering_color=NAVY_BLUE)
@@ -370,9 +378,9 @@ def easyscreen():
 
         onelevel = Button(image=button_surface, pos=(600, 210), text_input="Nivel 1", additional_image=easyone,
                               font=buttonfont, base_color=BLANCO, hovering_color=NAVY_BLUE)
-        twolevel = Button(image=button_surface, pos=(600,310), text_input="Nivel 2",
+        twolevel = Button(image=button_surface, pos=(600,310), text_input="Nivel 2",  additional_image=easytwo,
                               font=buttonfont, base_color=BLANCO, hovering_color=NAVY_BLUE)
-        threelevel = Button(image=button_surface, pos=(600,410), text_input="Nivel 3",
+        threelevel = Button(image=button_surface, pos=(600,410), text_input="Nivel 3", additional_image=easythree,
                                 font=buttonfont, base_color=BLANCO, hovering_color=NAVY_BLUE)
         levelback_button = Button(image=button_surface, pos=(600, 510), text_input="Regresar", additional_image=backimg,
                                   font=buttonfont, base_color=BLANCO, hovering_color=NAVY_BLUE)
@@ -413,11 +421,11 @@ def  hardscreen():
         screen.blit(background, (x,y))
         screen.blit(levelstext, (435, 30))
 
-        onelevel = Button(image=button_surface, pos=(600, 210), text_input="Nivel 1",
+        onelevel = Button(image=button_surface, pos=(600, 210), text_input="Nivel 1", additional_image=hardone,
                               font=buttonfont, base_color=BLANCO, hovering_color=NAVY_BLUE)
-        twolevel = Button(image=button_surface, pos=(600,310), text_input="Nivel 2",
+        twolevel = Button(image=button_surface, pos=(600,310), text_input="Nivel 2", additional_image=hardtwo,
                               font=buttonfont, base_color=BLANCO, hovering_color=NAVY_BLUE)
-        threelevel = Button(image=button_surface, pos=(600,410), text_input="Nivel 3",
+        threelevel = Button(image=button_surface, pos=(600,410), text_input="Nivel 3", additional_image=hardthree,
                                 font=buttonfont, base_color=BLANCO, hovering_color=NAVY_BLUE)
         levelback_button = Button(image=button_surface, pos=(600, 510), text_input="Regresar", additional_image=backimg,
                                   font=buttonfont, base_color=BLANCO, hovering_color=NAVY_BLUE)

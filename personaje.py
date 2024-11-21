@@ -1,5 +1,6 @@
 import pygame
 import random
+from PIL import Image
 from constantes import W, H, NEGRO
 
 
@@ -14,19 +15,20 @@ from constantes import W, H, NEGRO
 
 
 
-
+#   TORTUGA
 
 class Tortuga(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
         # Cargar las imágenes para la animación
         self.imagenes = [
-            pygame.image.load('imagen/tortuga/tortuga1.png'),
-            pygame.image.load('imagen/tortuga/tortuga2.png'),
-            pygame.image.load('imagen/tortuga/tortuga3.png'),
-            pygame.image.load('imagen/tortuga/tortuga4.png'),
-            pygame.image.load('imagen/tortuga/tortuga5.png')
+            pygame.image.load('imagen/tortuga/tortugacapturada1.png'),
+            pygame.image.load('imagen/tortuga/tortugacapturada2.png')
         ]
+        
+       # Cambiar el tamaño de la imagen (por ejemplo, 50x50 píxeles)
+        self.imagenes = [pygame.transform.scale(imagen, (150, 120)) for imagen in self.imagenes]
+        
         self.image = self.imagenes[0]  # Establecer la imagen inicial
         self.rect = self.image.get_rect()
         self.image.set_colorkey(NEGRO)
@@ -73,8 +75,120 @@ class Tortuga(pygame.sprite.Sprite):
 
 
 
+#   FOCA
+
+class Foca(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        # Cargar las imágenes para la animación
+        self.imagenes = [
+            pygame.image.load('imagen/foca/foca_capturada1.png'),
+            pygame.image.load('imagen/foca/foca_capturada2.png'),
+            pygame.image.load('imagen/foca/foca_capturada3.png')
+        ]
+        
+        # Cambiar el tamaño de la imagen (por ejemplo, 50x50 píxeles)
+        self.imagenes = [pygame.transform.scale(imagen, (150, 120)) for imagen in self.imagenes]
+        
+        self.image = self.imagenes[0]  # Establecer la imagen inicial
+        self.rect = self.image.get_rect()
+        self.image.set_colorkey(NEGRO)
+
+        # Establecer la posición inicial
+        self.rect.x = random.randint(W, W + 200)
+        self.rect.y = random.randint(0, H - self.rect.height)
+
+        # Aumentar el rango de velocidad
+        self.speed = random.randint(8, 12)  # Rango ajustado para mayor velocidad
+
+        self.contador_animacion = 0  # Contador para cambiar entre imágenes
+        
+        # Variables para el cooldown de colisiones
+        self.cooldown = 2000  # 2 segundos de cooldown
+        self.ultimo_impacto = 0  # Tiempo del último impacto registrado
+
+    def update(self):
+        # Actualizar la animación
+        self.contador_animacion += 1
+        if self.contador_animacion >= len(self.imagenes) * 5:  # Cambiar la imagen cada 5 fotogramas
+            self.contador_animacion = 0
+        self.image = self.imagenes[self.contador_animacion // 5]
+
+        # Mover la tortuga
+        self.rect.x -= self.speed
+        if self.rect.x < -self.rect.width:
+            self.rect.x = random.randint(W, W + 1000)
+            self.rect.y = random.randint(0, H - self.rect.height)
+            # Mantener el rango de velocidad al reaparecer
+            self.speed = random.randint(8, 12)  # Rango ajustado para mayor velocidad
+
+    def colision_con_jugador(self):
+        # Verifica si el cooldown ha pasado desde el último impacto
+        tiempo_actual = pygame.time.get_ticks()
+        if tiempo_actual - self.ultimo_impacto >= self.cooldown:
+            self.ultimo_impacto = tiempo_actual  # Actualiza el tiempo del último impacto
+            return True  # Indica que la colisión es válida
+        return False  # Si no ha pasado el cooldown, la colisión no es válida
 
 
+
+
+
+
+#   DELFIN
+
+class Delfin(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        # Cargar las imágenes para la animación
+        self.imagenes = [
+            pygame.image.load('imagen/delfin/delfin_capturado1.png'),
+            pygame.image.load('imagen/delfin/delfin_capturado2.png'),
+            pygame.image.load('imagen/delfin/delfin_capturado3.png')
+        ]
+        
+        # Cambiar el tamaño de la imagen (por ejemplo, 50x50 píxeles)
+        self.imagenes = [pygame.transform.scale(imagen, (150, 120)) for imagen in self.imagenes]
+        
+        self.image = self.imagenes[0]  # Establecer la imagen inicial
+        self.rect = self.image.get_rect()
+        self.image.set_colorkey(NEGRO)
+
+        # Establecer la posición inicial
+        self.rect.x = random.randint(W, W + 200)
+        self.rect.y = random.randint(0, H - self.rect.height)
+
+        # Aumentar el rango de velocidad
+        self.speed = random.randint(8, 12)  # Rango ajustado para mayor velocidad
+
+        self.contador_animacion = 0  # Contador para cambiar entre imágenes
+        
+        # Variables para el cooldown de colisiones
+        self.cooldown = 2000  # 2 segundos de cooldown
+        self.ultimo_impacto = 0  # Tiempo del último impacto registrado
+
+    def update(self):
+        # Actualizar la animación
+        self.contador_animacion += 1
+        if self.contador_animacion >= len(self.imagenes) * 5:  # Cambiar la imagen cada 5 fotogramas
+            self.contador_animacion = 0
+        self.image = self.imagenes[self.contador_animacion // 5]
+
+        # Mover la tortuga
+        self.rect.x -= self.speed
+        if self.rect.x < -self.rect.width:
+            self.rect.x = random.randint(W, W + 1000)
+            self.rect.y = random.randint(0, H - self.rect.height)
+            # Mantener el rango de velocidad al reaparecer
+            self.speed = random.randint(8, 12)  # Rango ajustado para mayor velocidad
+
+    def colision_con_jugador(self):
+        # Verifica si el cooldown ha pasado desde el último impacto
+        tiempo_actual = pygame.time.get_ticks()
+        if tiempo_actual - self.ultimo_impacto >= self.cooldown:
+            self.ultimo_impacto = tiempo_actual  # Actualiza el tiempo del último impacto
+            return True  # Indica que la colisión es válida
+        return False  # Si no ha pasado el cooldown, la colisión no es válida
 
 
 
@@ -98,7 +212,7 @@ class Tortuga(pygame.sprite.Sprite):
 
 
 
-class Enemigo(pygame.sprite.Sprite):
+class EnemigoF(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
         # Definir el tamaño deseado para las imágenes
@@ -135,6 +249,44 @@ class Enemigo(pygame.sprite.Sprite):
             self.speed = random.randint(5, 12)  # Mantener rango de velocidad al reaparecer
 
 
+
+
+
+class EnemigoD(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        # Definir el tamaño deseado para las imágenes
+        ancho, alto = 100, 100  # Cambia estos valores para ajustar el tamaño
+        
+        # Cargar y escalar las imágenes para la animación
+        self.imagenes = [
+            pygame.transform.scale(pygame.image.load(f'imagen/Pezglobo/globo{i}.png'), (ancho, alto))
+            for i in range(1, 18)
+        ]
+        self.image = self.imagenes[0]  # Establecer la imagen inicial
+        self.rect = self.image.get_rect()
+        self.image.set_colorkey(NEGRO)
+
+        # Posición y velocidad iniciales
+        self.rect.x = random.randint(W, W + 200)
+        self.rect.y = random.randint(0, H - self.rect.height)
+        self.speed = random.randint(10, 20)  # Incrementar el rango de velocidad
+
+        self.contador_animacion = 0  # Contador para cambiar entre imágenes
+
+    def update(self):
+        # Actualizar la animación
+        self.contador_animacion += 1
+        if self.contador_animacion >= len(self.imagenes) * 17:  # Cambiar la imagen cada 17 fotogramas
+            self.contador_animacion = 0
+        self.image = self.imagenes[self.contador_animacion // 17]
+
+        # Mover el enemigo
+        self.rect.x -= self.speed
+        if self.rect.x < -self.rect.width:
+            self.rect.x = random.randint(W, W + 1000)
+            self.rect.y = random.randint(0, H - self.rect.height)
+            self.speed = random.randint(10, 20)  # Mantener rango de velocidad al reaparecer
 
 
 
@@ -339,18 +491,22 @@ class Jugador(pygame.sprite.Sprite):
 
 
 
-# Clase Liberar
-class Liberar(pygame.sprite.Sprite):
+#   Clase LiberarTortuga
+class LiberarTortuga(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
         # Cargar las imágenes para la animación
         self.imagenes = [
-            pygame.image.load('imagen/calamar/calamar1.png'),
-            pygame.image.load('imagen/calamar/calamar2.png'),
-            pygame.image.load('imagen/calamar/calamar3.png'),
-            pygame.image.load('imagen/calamar/calamar4.png'),
-            pygame.image.load('imagen/calamar/calamar5.png')
+            pygame.image.load('imagen/tortuga/tortuga1.png'),
+            pygame.image.load('imagen/tortuga/tortuga2.png'),
+            pygame.image.load('imagen/tortuga/tortuga3.png'),
+            pygame.image.load('imagen/tortuga/tortuga4.png'),
+            pygame.image.load('imagen/tortuga/tortuga5.png')
         ]
+        
+        # Cambiar el tamaño de la imagen (por ejemplo, 50x50 píxeles)
+        self.imagenes = [pygame.transform.scale(imagen, (150, 120)) for imagen in self.imagenes]
+        
         self.image = self.imagenes[0]  # Establecer la imagen inicial
         self.rect = self.image.get_rect()
         self.image.set_colorkey(NEGRO)
@@ -381,3 +537,102 @@ class Liberar(pygame.sprite.Sprite):
         self.animating = True  # Iniciar la animación
         self.contador_animacion = 0  # Reiniciar el contador de animación
 
+
+
+
+
+
+#   Liberar Foca
+
+class LiberarFoca(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        # Cargar las imágenes para la animación
+        self.imagenes = [
+            pygame.image.load('imagen/foca/foca2.png'),
+            pygame.image.load('imagen/foca/foca3.png'),
+            pygame.image.load('imagen/foca/foca4.png')
+        ]
+        
+        # Cambiar el tamaño de la imagen (por ejemplo, 50x50 píxeles)
+        self.imagenes = [pygame.transform.scale(imagen, (150, 120)) for imagen in self.imagenes]
+        
+        self.image = self.imagenes[0]  # Establecer la imagen inicial
+        self.rect = self.image.get_rect()
+        self.image.set_colorkey(NEGRO)
+
+        self.rect.x = x  # Posición inicial
+        self.rect.y = y
+        self.contador_animacion = 0  # Contador para cambiar entre imágenes
+        self.animating = False  # Estado de la animación
+
+    def update(self):
+        # Mover hacia la izquierda
+        self.rect.x -= 5  # Cambia la dirección a la izquierda
+
+        # Actualizar la animación
+        if self.animating:
+            self.contador_animacion += 1
+            if self.contador_animacion >= len(self.imagenes) * 5:  # Cambiar la imagen cada 5 fotogramas
+                self.animating = True  # Detener la animación al completar
+                self.contador_animacion = 0  # Reiniciar el contador
+            else:
+                self.image = self.imagenes[self.contador_animacion // 5]
+
+        # Desactivar el sprite al salir del borde izquierdo de la pantalla
+        if self.rect.x < -self.rect.width:  # Si sale del límite izquierdo
+            self.kill()  # Elimina el sprite de todos los grupos
+
+    def start_animation(self):
+        self.animating = True  # Iniciar la animación
+        self.contador_animacion = 0  # Reiniciar el contador de animación
+
+
+
+
+
+
+#   Liberar Delfin
+
+class LiberarDelfin(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        # Cargar las imágenes para la animación
+        self.imagenes = [
+            pygame.image.load('imagen/delfin/delfin2.png'),
+            pygame.image.load('imagen/delfin/delfin3.png'),
+            pygame.image.load('imagen/delfin/delfin4.png')
+        ]
+        
+        # Cambiar el tamaño de la imagen (por ejemplo, 50x50 píxeles)
+        self.imagenes = [pygame.transform.scale(imagen, (150, 120)) for imagen in self.imagenes]
+        
+        self.image = self.imagenes[0]  # Establecer la imagen inicial
+        self.rect = self.image.get_rect()
+        self.image.set_colorkey(NEGRO)
+
+        self.rect.x = x  # Posición inicial
+        self.rect.y = y
+        self.contador_animacion = 0  # Contador para cambiar entre imágenes
+        self.animating = False  # Estado de la animación
+
+    def update(self):
+        # Mover hacia la izquierda
+        self.rect.x -= 5  # Cambia la dirección a la izquierda
+
+        # Actualizar la animación
+        if self.animating:
+            self.contador_animacion += 1
+            if self.contador_animacion >= len(self.imagenes) * 5:  # Cambiar la imagen cada 5 fotogramas
+                self.animating = True  # Detener la animación al completar
+                self.contador_animacion = 0  # Reiniciar el contador
+            else:
+                self.image = self.imagenes[self.contador_animacion // 5]
+
+        # Desactivar el sprite al salir del borde izquierdo de la pantalla
+        if self.rect.x < -self.rect.width:  # Si sale del límite izquierdo
+            self.kill()  # Elimina el sprite de todos los grupos
+
+    def start_animation(self):
+        self.animating = True  # Iniciar la animación
+        self.contador_animacion = 0  # Reiniciar el contador de animación

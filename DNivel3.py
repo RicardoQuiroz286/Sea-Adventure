@@ -1,15 +1,46 @@
 import pygame
 import random
-from personaje import Enemigo, Oxigeno, Jugador, Tortuga, Liberar  # Importa las clases desde sprites.py
+from creditos import reproducir_video
+from personaje import EnemigoD, Jugador, Delfin, LiberarDelfin  # Importa las clases desde sprites.py
 from constantes import *  # Importa las variables desde config.py
-from musica import cargar_musica_fondo, gestionar_audio, reproducir_sonido_colision_tortuga, reproducir_sonido_oxigeno, reproducir_sonido_colision_enemigo  # Importa las funciones de audio
+from musica import cargar_musica_fondo, gestionar_audio, reproducir_sonido_colision_tortuga, reproducir_sonido_oxigeno, reproducir_sonido_colision_enemigo, reproducir_sonido_ganar, reproducir_sonido_pausar, reproducir_sonido_perder, estado_sonido, reiniciar_estado_sonido, manejar_pausa  # Importa las funciones de audio
 x = 0
+
+    
+
+
+def mostrar_pantalla_inicial(pantalla, imagen_inicial):
+    """Muestra una pantalla inicial hasta que el usuario presione una tecla."""
+    reloj = pygame.time.Clock()
+    mostrar = True
+    
+    # Configura la fuente y el mensaje
+    fuente = pygame.font.Font(None, 36)  # Usa una fuente predeterminada, tamaño 36
+    texto = fuente.render("Presiona cualquier tecla para jugar", True, (255, 0, 0))  # Texto en blanco
+    texto_rect = texto.get_rect(center=(W // 1.3, H - 50))  # Centra el texto en la parte inferior
+
+    while mostrar:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:  # Si el usuario cierra la ventana
+                pygame.quit()
+                exit()
+            if event.type == pygame.KEYDOWN:  # Si presiona cualquier tecla
+                mostrar = False
+
+        pantalla.blit(imagen_inicial, (0, 0))  # Dibuja la imagen inicial
+        pantalla.blit(texto, texto_rect)  # Dibuja el texto
+        pygame.display.update()
+        reloj.tick(30)  # Controla la velocidad del bucle
+
+
+
+
 
 def hard3():
 
     # Inicialización de Pygame
     pygame.init()
-    
+
     # Pantalla - ventana
     PANTALLA = pygame.display.set_mode((W, H))
     pygame.display.set_caption('Aventura en el mar')
@@ -18,6 +49,14 @@ def hard3():
     
     # Fondo del juego
     fondo = pygame.image.load('imagen/fondo/foceano.png')
+    fondopantallas = pygame.image.load('imagen/fondo/Fondoganaste.jpg')
+    
+     # Imagen inicial
+    imagen_inicial = pygame.image.load('imagen/fondo/controles.jpg')  # Ruta de la imagen inicial
+    imagen_inicial = pygame.transform.scale(imagen_inicial, (W, H))  # Ajusta el tamaño de la imagen al tamaño de la pantalla
+    
+    # Mostrar pantalla inicial
+    mostrar_pantalla_inicial(PANTALLA, imagen_inicial)
     
     # Crear instancia del jugador
     jugador = Jugador()
@@ -28,27 +67,38 @@ def hard3():
     # Crear grupos de sprites
     sprites = pygame.sprite.Group()
     enemigos = pygame.sprite.Group()
-    tortugas = pygame.sprite.Group()
-    oxigeno = pygame.sprite.Group()
-    liberaciones = pygame.sprite.Group()  # Grupo para las liberaciones
+    delfines = pygame.sprite.Group()
+    liberaciones = pygame.sprite.Group()
     
     # Añadir el jugador al grupo de sprites
     sprites.add(jugador)
     
-    # Crear enemigos y tortugas
+    # Crear enemigos y delfin
     for _ in range(1):
-        tortuga = Tortuga()
-        sprites.add(tortuga)
-        tortugas.add(tortuga)
+        delfin = Delfin()
+        sprites.add(delfin)
+        delfines.add(delfin)
     
-    for _ in range(8):
-        enemigo = Enemigo()
+    for _ in range(6):
+        enemigo = EnemigoD()
         enemigos.add(enemigo)
     
-    for _ in range(2):
-        oxigeno_sprite = Oxigeno()
-        sprites.add(oxigeno_sprite)
-        oxigeno.add(oxigeno_sprite)
+    
+    # Clase para botones clickeables
+    class Boton(pygame.sprite.Sprite):
+        def __init__(self, x, y, texto, imagen_path="imagen/botonme.png"):
+            super().__init__()
+            # Cargar la imagen en lugar de crear un color de fondo
+            self.image = pygame.image.load(imagen_path)
+            self.image = pygame.transform.scale(self.image, (200, 100))  # Redimensionar si es necesario
+    
+            # Añadir texto sobre la imagen
+            fuente = pygame.font.SysFont(None, 40)
+            texto_render = fuente.render(texto, True, (255, 255, 255))  # Texto blanco o de otro color
+            self.image.blit(texto_render, (35, 35))  # Alineación del texto
+    
+            # Obtener el rectángulo para posicionar el botón
+            self.rect = self.image.get_rect(center=(x, y))
     
     # Clase para el botón de pausa
     class BotonPausa(pygame.sprite.Sprite):
@@ -59,9 +109,11 @@ def hard3():
             self.rect = self.image.get_rect()
             self.rect.topleft = (550, 10)
     
-    # Crear el botón de pausa
+    # Crear botones
     boton_pausa = BotonPausa()
-    sprites.add(boton_pausa)
+    boton_reiniciar = Boton(W // 2, H // 2 + 50, "Reiniciar")
+    boton_salir = Boton(W // 2, H // 2 + 120, "Salir")
+    boton_continuar = Boton(W // 2, H // 2 + 50, "Continuar")
     
     # Variables de control
     x = 0
@@ -72,6 +124,30 @@ def hard3():
     jugador_ganador = False
     tiempo_total = 120
     tiempo_restante = tiempo_total * 1000
+    musica_silenciada = False  # Bandera para verificar si la música está silenciada
+    volumen_original = 0.5  # Volumen inicial de la música (ajústalo según sea necesario)
+    pygame.mixer.music.set_volume(volumen_original)  # Configura el volumen inicial
+
+    
+    
+    # Carga la imagen de "PAUSA"
+    imagen_pausa = pygame.image.load("imagen/pausaimg.png")
+    imagen_rescate = pygame.image.load("imagen/rescatasteatodos.png")
+    imagen_felicidades = pygame.image.load("imagen/felicidades.png")
+    imagen_sinoxigeno = pygame.image.load("imagen/tequedastesinoxigeno.png")
+    imagen_intentar = pygame.image.load("imagen/volverintentar.png")       
+    def mostrar_imagen_pausa(pantalla, imagen, x, y):
+        pantalla.blit(imagen, (x, y))       
+    def mostrar_imagen_rescate(pantalla, imagen, x, y):
+        pantalla.blit(imagen, (x, y))       
+    def mostrar_imagen_felicidades(pantalla, imagen, x, y):
+        pantalla.blit(imagen, (x, y))       
+    def mostrar_imagen_sinoxigeno(pantalla, imagen, x, y):
+        pantalla.blit(imagen, (x, y))       
+    def mostrar_imagen_intentar(pantalla, imagen, x, y):
+        pantalla.blit(imagen, (x, y))
+    
+    
     
     # Función para mostrar texto en pantalla
     def mostrar_texto(pantalla, texto, tamaño, color, x, y):
@@ -88,237 +164,196 @@ def hard3():
     
     # Función para mostrar el contador de tortugas
     def mostrar_contador_liberaciones(pantalla, contador):
-        imagen_liberacion = pygame.image.load('imagen/tortuga.png')
+        imagen_liberacion = pygame.image.load('imagen/delfin/delfin_capturado1.png')
         imagen_liberacion = pygame.transform.scale(imagen_liberacion, (100, 100))
-        pantalla.blit(imagen_liberacion, (220, 10))
+        pantalla.blit(imagen_liberacion, (210, 1))
         texto_liberaciones = f": {contador} / 5"
         mostrar_texto(pantalla, texto_liberaciones, 40, (255, 255, 255), 300, 40)
+        
     
-    # Función para mostrar la pantalla de victoria
-    def mostrar_pantalla_ganaste(pantalla):
-        overlay = pygame.Surface((W, H))
-        overlay.set_alpha(150)
-        overlay.fill((0, 0, 0))
-        pantalla.blit(overlay, (0, 0))
-        mostrar_texto(pantalla, "¡GANASTE!", 100, (255, 255, 255), W // 2 - 100, H // 2 - 100)
-        mostrar_texto(pantalla, "Presiona S para salir", 40, (255, 255, 255), W // 2 - 150, H // 2 + 10)
-        pygame.display.update()
+    def reproducir_sonido_perder():
+    # Cargar y reproducir el sonido de pausa
+     pygame.mixer.Sound('sonido/perder.wav').play()
     
-    # Función para mostrar la pantalla de pausa
-    def mostrar_pantalla_pausa(pantalla):
-        overlay = pygame.Surface((W, H))
-        overlay.set_alpha(150)
-        overlay.fill((0, 0, 0))
-        pantalla.blit(overlay, (0, 0))
-        mostrar_texto(pantalla, "PAUSA", 100, (255, 255, 255), W // 2 - 100, H // 2 - 100)
-        mostrar_texto(pantalla, "Presiona C para continuar", 40, (255, 255, 255), W // 2 - 160, H // 2)
-        mostrar_texto(pantalla, "Presiona S para salir", 40, (255, 255, 255), W // 2 - 140, H // 2 + 50)
-        pygame.display.update()
+    def reproducir_sonido_pausar():
+    # Cargar y reproducir el sonido de pausa
+     pygame.mixer.Sound('sonido/pausa.wav').play()
+     
     
-    # Función para mostrar la pantalla de volver a intentar
-    def mostrar_pantalla_intentar(pantalla):
-        overlay = pygame.Surface((W, H))
-        overlay.set_alpha(150)
-        overlay.fill((0, 0, 0))
-        pantalla.blit(overlay, (0, 0))
-        mostrar_texto(pantalla, "¿VOLVER A INTENTAR?", 100, (255, 255, 255), W // 2 - 250, H // 2 - 100)
-        mostrar_texto(pantalla, "Presiona C para continuar", 40, (255, 255, 255), W // 2 - 160, H // 2)
-        mostrar_texto(pantalla, "Presiona S para salir", 40, (255, 255, 255), W // 2 - 140, H // 2 + 50)
-        pygame.display.update()
+     
+    def reproducir_sonido_ganar():
+    # Cargar y reproducir el sonido de pausa
+     pygame.mixer.Sound('sonido/Ganaste.wav').play()
+
     
+    # Función para actualizar la pantalla
     def recargaPantalla():
-        global x  # Define x como global para que la función pueda acceder a ella y modificar su valor
-        x_relativa = x % fondo.get_rect().width
-        PANTALLA.blit(fondo, (x_relativa - fondo.get_rect().width, 0))
-        if x_relativa < W:
-            PANTALLA.blit(fondo, (x_relativa, 0))
-        x -= 5
-        sprites.draw(PANTALLA)
-        enemigos.draw(PANTALLA)
-        jugador.dibujar_tanques_oxigeno(PANTALLA)
-        liberaciones.draw(PANTALLA)  # Dibujar las liberaciones
-        mostrar_temporizador(PANTALLA, tiempo_restante)
-        mostrar_contador_liberaciones(PANTALLA, contador_liberaciones)
+        global x
+        if not pausado and not jugador_ganador and not perdedor:
+            x_relativa = x % fondo.get_rect().width
+            PANTALLA.blit(fondo, (x_relativa - fondo.get_rect().width, 0))
+            if x_relativa < W:
+                PANTALLA.blit(fondo, (x_relativa, 0))
+            x -= 5
+            sprites.draw(PANTALLA)
+            enemigos.draw(PANTALLA)
+            jugador.dibujar_tanques_oxigeno(PANTALLA)
+            liberaciones.draw(PANTALLA)
+            mostrar_temporizador(PANTALLA, tiempo_restante)
+            mostrar_contador_liberaciones(PANTALLA, contador_liberaciones)
     
-    
-    # Al inicio del código, carga la imagen de fondo
-    imagen_fondo_perder = pygame.image.load( "imagen/Fondo/oceano parte_1.png").convert()  # Cambia la ruta a la imagen de perder
-    imagen_fondo_pausa = pygame.image.load(  "imagen/Fondo/oceano parte_1.png").convert()  # Cambia la ruta a la imagen de pausa
-    imagen_fondo_ganaste = pygame.image.load("imagen/Fondo/oceano parte_1.png").convert()  # Cambia la ruta a la imagen de ganar
-    
-    # Agrega una variable para controlar el estado de pérdida
+    # Variables de estado
     perdedor = False
-    
-    # Valores iniciales
     TIEMPO_INICIAL = 120000  # Tiempo inicial en milisegundos
     OXIGENO_INICIAL = 3  # Oxígeno inicial del jugador
+    posicion_inicial_jugador = (100, 100)  # Posición inicial del jugador
     
-    # Guarda la posición inicial del jugador (buzo)
-    posicion_inicial_jugador = (100, 100)  # Cambia esto a las coordenadas iniciales deseadas
-    
+    # Variables de control para los sonidos
+    sonido_pausa_reproducido = False
+    sonido_ganar_reproducido = False
+    sonido_perder_reproducido = False
+
+
+
+
+
+
+
+
+#---------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
     while ejecuta:
         dt = reloj.tick(18)
         if not pausado and not jugador_ganador and not perdedor:
-            tiempo_restante -= dt
-    
+            tiempo_restante -= dt            
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 ejecuta = False
             if event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_pos = pygame.mouse.get_pos()
-                if boton_pausa.rect.collidepoint(mouse_pos):
-                    pausado = not pausado
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE:
-                    pausado = not pausado
-    
+                if boton_pausa.rect.collidepoint(mouse_pos) and not (jugador_ganador or perdedor):
+                    pausado = True
+                elif pausado:
+                    if boton_continuar.rect.collidepoint(mouse_pos):
+                        pausado = False
+                        sonido_pausa_reproducido = False  # Permitir que el sonido de pausa se reproduzca nuevamente
+                    elif boton_salir.rect.collidepoint(mouse_pos):
+                        ejecuta = False
+                elif jugador_ganador or perdedor:
+                    if boton_reiniciar.rect.collidepoint(mouse_pos):
+                        # Reinicia los valores del juego
+                        jugador.oxigeno = OXIGENO_INICIAL
+                        contador_liberaciones = 0
+                        tiempo_restante = TIEMPO_INICIAL
+                        jugador_ganador = False
+                        perdedor = False
+                        sonido_ganar_reproducido = False
+                        sonido_perder_reproducido = False
+                        jugador.rect.topleft = posicion_inicial_jugador
+                        # Reposicionar enemigos y oxígeno
+                        for enemigo in enemigos:
+                            enemigo.rect.x = random.randint(W, W + 200)
+                            enemigo.rect.y = random.randint(0, H - enemigo.rect.height)
+                    elif boton_salir.rect.collidepoint(mouse_pos):
+                        ejecuta = False
+
+            if event.type == pygame.KEYDOWN and not (jugador_ganador or perdedor):
+                if event.key == pygame.K_SPACE:  # Espacio para pausar o continuar
+                    pausado = not pausado  # Cambia el estado de pausa
+                    sonido_pausa_reproducido = False  # Restablece el sonido de pausa
+
         keys = pygame.key.get_pressed()
-    
+
         if not pausado and not jugador_ganador and not perdedor:
             if jugador.oxigeno > 0 and tiempo_restante > 0:
                 jugador.mover(keys)
                 gestionar_audio(keys)
                 sprites.update()
                 enemigos.update()
-                liberaciones.update()  # Actualizar las liberaciones
-    
+                liberaciones.update()
+
                 # Colisiones con enemigos
                 if pygame.sprite.spritecollide(jugador, enemigos, False):
                     jugador.perder_oxigeno()
                     reproducir_sonido_colision_enemigo()
-    
                     for enemigo in enemigos:
                         if enemigo.rect.colliderect(jugador.rect):
                             enemigo.rect.x = random.randint(W, W + 200)
                             enemigo.rect.y = random.randint(0, H - enemigo.rect.height)
-    
+
                 # Colisión con tortugas
-                for tortuga in tortugas:
-                    if pygame.sprite.spritecollide(jugador, tortugas, False):
-                        if tortuga.colision_con_jugador():
+                for delfin in delfines:
+                    if pygame.sprite.spritecollide(jugador, delfines, False):
+                        if delfin.colision_con_jugador():
                             reproducir_sonido_colision_tortuga()
                             contador_liberaciones += 1
-                            liberacion = Liberar(tortuga.rect.x, tortuga.rect.y)
+                            liberacion = LiberarDelfin(delfin.rect.x, delfin.rect.y)
                             liberacion.start_animation()
                             sprites.add(liberacion)
                             liberaciones.add(liberacion)
-                            
-                            # Reposicionar la tortuga
-                            tortuga.rect.x = random.randint(W, W + 200)
-                            tortuga.rect.y = random.randint(0, H - tortuga.rect.height)
+                            delfin.rect.x = random.randint(W, W + 200)
+                            delfin.rect.y = random.randint(0, H - delfin.rect.height)
                             break
                         
-                # Ganar condiciones
+
+                # Condiciones para ganar
                 if contador_liberaciones >= 5:
                     jugador_ganador = True
-    
-                # Colisiones con oxígeno
-                for oxigeno_sprite in oxigeno:
-                    if jugador.rect.colliderect(oxigeno_sprite.rect):
-                        reproducir_sonido_oxigeno()
-                        jugador.recuperar_oxigeno()
-                        oxigeno_sprite.rect.x = random.randint(W, W + 200)
-    
-                # Verificar condición de victoria por tiempo
-                if tiempo_restante <= 0:
-                    jugador_ganador = True
-    
-            else:
-                # Si el jugador se queda sin oxígeno o el tiempo se acaba
-                perdedor = True  # Cambia el estado a perdedor
-    
-        # Dibuja todo en la pantalla
-        recargaPantalla()
-    
-        # Mostrar pantalla de victoria
-        if jugador_ganador:
-            # Dibuja la imagen de fondo de ganar
-            PANTALLA.blit(imagen_fondo_ganaste, (0, 0))  # Dibuja la imagen en la esquina superior izquierda
-    
-            # Mostrar el texto de victoria
-            mostrar_texto(PANTALLA, "¡GANASTE!", 100, (255, 255, 255), W // 3, H // 2 - 50)
-            mostrar_texto(PANTALLA, "Presiona R para reiniciar", 40, (255, 255, 255), W // 3, H // 2 + 50)
-            mostrar_texto(PANTALLA, "Presiona S para salir", 40, (255, 255, 255), W // 3, H // 2 + 100)
-            pygame.display.update()
-    
-            # Lógica para reiniciar o salir
-            if keys[pygame.K_r]:  # Reiniciar el nivel
-                # Reiniciar el juego aquí
-                jugador.oxigeno = OXIGENO_INICIAL  # Resetea el oxígeno a su valor inicial
-                contador_liberaciones = 0
-                tiempo_restante = TIEMPO_INICIAL  # Resetea el tiempo a su valor inicial
-                jugador_ganador = False
-                perdedor = False
-                
-                # Restablecer la posición del jugador
-                jugador.rect.topleft = posicion_inicial_jugador  # Regresar a la posición inicial
-    
-                # Aquí puedes agregar la lógica para reiniciar enemigos y objetos
-                for enemigo in enemigos:
-                    enemigo.rect.x = random.randint(W, W + 200)  # Reposicionar enemigo
-                    enemigo.rect.y = random.randint(0, H - enemigo.rect.height)
-    
-                # Reposicionar tanques de oxígeno si es necesario
-                for oxigeno_sprite in oxigeno:
-                    oxigeno_sprite.rect.x = random.randint(W, W + 200)  # Reposicionar oxígeno
-    
-            if keys[pygame.K_s]:  # Salir del juego
-                ejecuta = False
-    
-        # Mostrar pantalla de perder
-        elif perdedor:
-            # Dibuja la imagen de fondo de perder
-            PANTALLA.blit(imagen_fondo_perder, (0, 0))  # Dibuja la imagen en la esquina superior izquierda
-    
-            # Mostrar opciones de volver a intentar o salir
-            mostrar_texto(PANTALLA, "¿VOLVER A INTENTAR?", 100, (255, 255, 255), W // 3 - 200, H // 2 - 50)
-            mostrar_texto(PANTALLA, "Presiona R para reiniciar", 40, (255, 255, 255), W // 3 - 150, H // 2 + 50)
-            mostrar_texto(PANTALLA, "Presiona S para salir", 40, (255, 255, 255), W // 3 - 150, H // 2 + 100)
-            pygame.display.update()
-    
-            # Lógica para reiniciar o salir
-            if keys[pygame.K_r]:  # Reiniciar el nivel
-                # Reiniciar el juego aquí
-                jugador.oxigeno = OXIGENO_INICIAL  # Resetea el oxígeno a su valor inicial
-                contador_liberaciones = 0
-                tiempo_restante = TIEMPO_INICIAL  # Resetea el tiempo a su valor inicial
-                perdedor = False
-                jugador_ganador = False
-                
-                # Restablecer la posición del jugador
-                jugador.rect.topleft = posicion_inicial_jugador  # Regresar a la posición inicial
-    
-                # Aquí puedes agregar la lógica para reiniciar enemigos y objetos
-                for enemigo in enemigos:
-                    enemigo.rect.x = random.randint(W, W + 200)  # Reposicionar enemigo
-                    enemigo.rect.y = random.randint(0, H - enemigo.rect.height)
-    
-                # Reposicionar tanques de oxígeno si es necesario
-                for oxigeno_sprite in oxigeno:
-                    oxigeno_sprite.rect.x = random.randint(W, W + 200)  # Reposicionar oxígeno
-    
-            if keys[pygame.K_s]:  # Salir del juego
-                ejecuta = False
-    
-        # Mostrar la pantalla de pausa solo si está pausado
-        elif pausado:
-            # Dibuja la imagen de fondo de pausa
-            PANTALLA.blit(imagen_fondo_pausa, (0, 0))  # Dibuja la imagen en la esquina superior izquierda
-    
-            # Aquí se muestra la pausa
-            mostrar_texto(PANTALLA, "PAUSA", 100, (255, 255, 255), W // 2 - 100, H // 2 - 100)
-            mostrar_texto(PANTALLA, "Presiona C para continuar", 40, (255, 255, 255), W // 2 - 160, H // 2)
-            mostrar_texto(PANTALLA, "Presiona S para salir", 40, (255, 255, 255), W // 2 - 140, H // 2 + 50)
-            
-            if keys[pygame.K_c]:
-                pausado = False
-            if keys[pygame.K_s]:
-                ejecuta = False
-    
-        pygame.display.update()
-    
-    pygame.quit()
+                # Condiciones para perder
+                elif jugador.oxigeno <= 0 or tiempo_restante <= 0:
+                    perdedor = True
 
+            # Mostrar la pantalla de juego
+            recargaPantalla()
+
+            # Mostrar el botón de pausa
+            PANTALLA.blit(boton_pausa.image, boton_pausa.rect)
+
+        # Pantalla de pausa
+        if pausado:
+            PANTALLA.blit(fondopantallas, (0, 0))
+            if not sonido_pausa_reproducido:
+                reproducir_sonido_pausar()
+                sonido_pausa_reproducido = True  # Marcar como reproducido
+            mostrar_imagen_pausa(PANTALLA, imagen_pausa, W // 2.8 - 100, H // 3 - 100)
+            boton_continuar.rect.center = (W // 2, H // 2 + 50)
+            boton_salir.rect.center = (W // 2, H // 2 + 120)
+            PANTALLA.blit(boton_pausa.image, boton_pausa.rect)
+            PANTALLA.blit(boton_continuar.image, boton_continuar.rect)
+            PANTALLA.blit(boton_salir.image, boton_salir.rect)
+
+        # Pantalla de victoria
+        if jugador_ganador:
+            PANTALLA.blit(fondopantallas, (0, 0))
+            if not sonido_ganar_reproducido:
+                reproducir_sonido_ganar()
+                sonido_ganar_reproducido = True  # Marcar como reproducido
+                
+              # Reproducir video al ganar
+                reproducir_video()   
+                
+                
+
+        # Pantalla de derrota
+        if perdedor:
+            PANTALLA.blit(fondopantallas, (0, 0))
+            if not sonido_perder_reproducido:
+                reproducir_sonido_perder()
+                sonido_perder_reproducido = True  # Marcar como reproducido
+            mostrar_imagen_sinoxigeno(PANTALLA, imagen_sinoxigeno, W // 11.8 - 100, H // 3 - 100)
+            mostrar_imagen_intentar(PANTALLA, imagen_intentar, W // 2.8 - 300, H // 2 - 100)
+            boton_reiniciar.rect.center = (W // 2, H // 2 + 50)
+            boton_salir.rect.center = (W // 2, H // 2 + 120)
+            PANTALLA.blit(boton_reiniciar.image, boton_reiniciar.rect)
+            PANTALLA.blit(boton_salir.image, boton_salir.rect)
+
+        pygame.display.update()
 
 
 
