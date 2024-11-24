@@ -367,10 +367,12 @@ class Oxigeno(pygame.sprite.Sprite):
 
 
 
-
+BLANCO = (255, 255, 255)
 NEGRO = (0, 0, 0)
 
-class Jugador(pygame.sprite.Sprite):
+# NIÑO
+
+class JugadorH(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
 
@@ -479,6 +481,118 @@ class Jugador(pygame.sprite.Sprite):
         if self.invulnerable and pygame.time.get_ticks() - self.ultimo_daño > self.tiempo_invulnerable:
             self.invulnerable = False
 
+
+
+
+
+
+
+
+
+
+
+# NIÑA
+
+class JugadorM(pygame.sprite.Sprite):
+    def __init__(self, ancho=None, alto=None):
+        super().__init__()
+
+        # Cargar las imágenes de animación del buzo con transparencia alfa
+        self.imagenes = [
+            pygame.image.load('imagen/personajes/bu1.PNG').convert_alpha(),
+            pygame.image.load('imagen/personajes/bu2.PNG').convert_alpha(),
+            pygame.image.load('imagen/personajes/bu3.PNG').convert_alpha(),
+            pygame.image.load('imagen/personajes/bu4.PNG').convert_alpha()
+        ]
+        
+        # Ajustar el tamaño si se especifican dimensiones
+        if ancho is not None and alto is not None:
+            self.cambiar_tamano_por_valores(ancho, alto)
+
+        self.indice_animacion = 0
+        self.image = self.imagenes[self.indice_animacion]
+
+        # Definir el rectángulo de colisión y ajustar tamaño
+        self.rect = self.image.get_rect()
+        self.rect.inflate_ip(-self.rect.width * 0.5, -self.rect.height * 0.3)  # Ajuste de colisión
+
+        # Posición inicial del personaje
+        self.rect.topleft = (30, 250)
+
+        # Atributos del jugador
+        self.velocidad = 10
+        self.oxigeno = 3  # Tanques de oxígeno iniciales
+
+        # Variables de animación
+        self.tiempo_ultimo_frame = pygame.time.get_ticks()
+        self.velocidad_animacion = 150  # Cambiar imagen cada 150 ms
+
+        # Variables de invulnerabilidad
+        self.invulnerable = False
+        self.tiempo_invulnerable = 2000  # Tiempo de invulnerabilidad en ms
+        self.ultimo_daño = 0  # Momento del último daño
+
+    def mover(self, keys):
+        # Movimiento del jugador si tiene oxígeno
+        if self.oxigeno > 0:
+            if keys[pygame.K_LEFT] and self.rect.left > self.velocidad:
+                self.rect.x -= self.velocidad
+            if keys[pygame.K_RIGHT] and self.rect.right < W:
+                self.rect.x += self.velocidad
+            if keys[pygame.K_UP] and self.rect.top > self.velocidad:
+                self.rect.y -= self.velocidad
+            if keys[pygame.K_DOWN] and self.rect.bottom < H:
+                self.rect.y += self.velocidad
+
+    def cambiar_tamano(self, factor):
+        # Cambia el tamaño de todas las imágenes según el factor proporcionado
+        self.imagenes = [
+            pygame.transform.scale(imagen, (int(imagen.get_width() * factor), int(imagen.get_height() * factor)))
+            for imagen in self.imagenes
+        ]
+        # Actualiza la imagen actual y el rectángulo con el nuevo tamaño
+        self.image = self.imagenes[self.indice_animacion]
+        self.rect = self.image.get_rect(center=self.rect.center)
+
+    def cambiar_tamano_por_valores(self, ancho, alto):
+        # Cambia el tamaño de todas las imágenes según el ancho y alto proporcionados
+        self.imagenes = [
+            pygame.transform.scale(imagen, (ancho, alto))
+            for imagen in self.imagenes
+        ]
+        # Actualiza la imagen actual y el rectángulo con el nuevo tamaño
+        self.image = self.imagenes[self.indice_animacion]
+        self.rect = self.image.get_rect(center=self.rect.center)
+
+    def perder_oxigeno(self):
+        if not self.invulnerable and self.oxigeno > 0:
+            self.oxigeno -= 1
+            self.invulnerable = True
+            self.ultimo_daño = pygame.time.get_ticks()
+
+    def recuperar_oxigeno(self):
+        if self.oxigeno < 3:
+            self.oxigeno += 1
+
+    def dibujar_tanques_oxigeno(self, pantalla):
+        tanque_img = pygame.image.load('imagen/tanqueo1.png').convert_alpha()
+        for i in range(self.oxigeno):
+            pantalla.blit(tanque_img, (10 + (i * 40), 10))
+
+    def actualizar_animacion(self):
+        # Cambia de imagen en base a la velocidad de animación
+        tiempo_actual = pygame.time.get_ticks()
+        if tiempo_actual - self.tiempo_ultimo_frame > self.velocidad_animacion:
+            self.indice_animacion = (self.indice_animacion + 1) % len(self.imagenes)
+            self.image = self.imagenes[self.indice_animacion]
+            self.tiempo_ultimo_frame = tiempo_actual
+
+    def update(self):
+        # Actualizar animación y verificar invulnerabilidad
+        self.actualizar_animacion()
+
+        if self.invulnerable and pygame.time.get_ticks() - self.ultimo_daño > self.tiempo_invulnerable:
+            self.invulnerable = False
 
 
 

@@ -1,13 +1,15 @@
+current_leng = "es"
 import pygame, sys, os 
-from FNivel1 import *  #IMPORTA NIVEL 1 Facil
-from FNivel2 import *  #IMPORTA NIVEL 2 Facil
-from FNivel3 import *  #IMPORTA NIVEL 3 Facil
-from DNivel1 import *  #IMPORTA NIVEL 1 Dificil
-from DNivel2 import *  #IMPORTA NIVEL 2 Dificil
-from DNivel3 import *  #IMPORTA NIVEL 3 Dificil
+from Seleccion_personajeF1 import seleccionN1F
+from Seleccion_personajeF2 import seleccionN2F
+from Seleccion_personajeF3 import seleccionN3F
+from Seleccion_personajeD1 import seleccionN1D
+from Seleccion_personajeD2 import seleccionN2D
+from Seleccion_personajeD3 import seleccionN3D
 from personaje import *
 from constantes import *  #IMPORTA CONSTANTES COMO COLORES
 from idiomas import *
+from creditos import *
 
 
 
@@ -15,11 +17,6 @@ from idiomas import *
 pygame.init()
 screen = pygame.display.set_mode((W, H))
 
-
-
-#IDIOMA DE INICIO
-global current_leng 
-current_leng = "es"
 
 
 
@@ -52,6 +49,8 @@ button_surface = pygame.image.load("imagenes/buttons88.png")
 button_surface = pygame.transform.scale(button_surface, (350, 90))
 button_surfacee = pygame.image.load("imagenes/buttons88.png")
 button_surfacee = pygame.transform.scale(button_surfacee, (300, 95))
+button_surfaceee = pygame.image.load("imagenes/buttons88.png")
+button_surfaceee = pygame.transform.scale(button_surfaceee, (450, 90))
 buttonlg = pygame.image.load("imagenes/settingsssss.png")
 buttonlg = pygame.transform.scale(buttonlg, (120,120))
 buttonctl = pygame.image.load("imagenes/ctl3.png")
@@ -218,29 +217,43 @@ class Button:
         self.is_selected = selected
 
     
+controles = pygame.image.load("imagenes/controlll.jpg")    
+controles = pygame.transform.scale(controles, (1200, 600))
+controless = pygame.image.load("imagenes/controll.jpg")
 
 
+img = {
+    "es": {
+        controles: controles
+    },
+
+    "en": {
+        controles: controless
+    }
+}
 
 
 
 
 #Pantalla Idioma
 def lenscreen():
+
+    global current_leng
     
     while True:
-        global current_leng
 
         LEN_MOUSE_POS = pygame.mouse.get_pos()
         screen.blit(background, (x,y))
+        lengtext = titlefont.render(textos[current_leng]["Idiomas"], True, BLANCO)
         screen.blit(lengtext, (425, 30))
 
         espbutton = Button(image=buttonesp, pos=(450, 250), text_input="",
                            font=buttonfont, base_color=BLANCO, hovering_color=NAVY_BLUE, draw_border=True )
         engbutton = Button(image=buttoneng, pos=(750, 250), text_input="",
                            font=buttonfont, base_color=BLANCO, hovering_color=NAVY_BLUE, draw_border=True)
-        aboutbutton = Button(image=button_surface, pos=(600, 400), text_input="Desarrolladores", additional_image=creimg,
+        aboutbutton = Button(image=button_surfaceee, pos=(600, 400), text_input=textos[current_leng]["Desarrolladores"], additional_image=creimg,
                              font=buttonfont, base_color=BLANCO, hovering_color=NAVY_BLUE)
-        diffback_button = Button(image=button_surface, pos=(600, 500), text_input="Regresar", additional_image=backimg,
+        diffback_button = Button(image=button_surfaceee, pos=(600, 500), text_input=textos[current_leng]["Regresar"], additional_image=backimg,
                                   font=buttonfont, base_color=BLANCO, hovering_color=NAVY_BLUE)
         
         
@@ -261,10 +274,17 @@ def lenscreen():
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if espbutton.checkForInput(LEN_MOUSE_POS):
                     current_leng = 'es'
+                    continue
                 if engbutton.checkForInput(LEN_MOUSE_POS):
                     current_leng = 'en'
+                    continue
                 if aboutbutton.checkForInput(LEN_MOUSE_POS):
-                    aboutscreen()
+                    if current_leng == "es":
+                        reproducir_video()  # Llama a la función y verifica el retorno
+                            
+                    if current_leng == "en":
+                        reproducir_videoo()
+                            
                 if diffback_button.checkForInput(LEN_MOUSE_POS):
                     menu()
 
@@ -274,21 +294,20 @@ def lenscreen():
 
 
 
-def ctlscreen():
 
-    #IMAGEN DE CONTROLES
-    controles = pygame.image.load("imagenes/control.jpg")
-    controles = pygame.transform.scale(controles, (1200, 600))
+
+def ctlscreen(regresar_func):
+    # IMAGEN DE CONTROLES
 
     while True:
         CTL_MOUSE_POS = pygame.mouse.get_pos()
 
         screen.fill(AZUL)
-        screen.blit(controles, (0,0))
+        screen.blit(img[current_leng][controles], (0, 0))
 
-        mainback_button = Button(image=button_surface, pos=(600, 550), text_input="Regresar", additional_image=backimg,
-                                  font=buttonfont, base_color=BLANCO, hovering_color=NAVY_BLUE)
-        
+        mainback_button = Button(image=button_surface, pos=(600, 550), text_input=textos[current_leng]["Regresar"], additional_image=backimg,
+                                 font=buttonfont, base_color=BLANCO, hovering_color=NAVY_BLUE)
+
         mainback_button.update(screen)
 
         for event in pygame.event.get():
@@ -296,9 +315,8 @@ def ctlscreen():
                 pygame.quit()
                 sys.exit()
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if  mainback_button.checkForInput(CTL_MOUSE_POS):
-                    menu()
-
+                if mainback_button.checkForInput(CTL_MOUSE_POS):
+                    regresar_func()  # Llama a la función que se pasó como parámetro
 
         pygame.display.update()
 
@@ -333,13 +351,14 @@ def diffscreen():
     while True:
         DIFF_MOUSE_POS = pygame.mouse.get_pos()
         screen.blit(background, (x, y))
+        difftext = titlefont.render(textos[current_leng]["Dificultad"], True, AMARILLO)
         screen.blit(difftext, (390, 70))
 
-        easybutton = Button(image=button_surface, pos=(600, 250), text_input="Principiante", additional_image=easyimg,
+        easybutton = Button(image=button_surface, pos=(600, 250), text_input=textos[current_leng]["Principiante"], additional_image=easyimg,
                              font=buttonfont, base_color=BLANCO, hovering_color=AMARILLO)
-        hardbutton = Button(image=button_surface, pos=(600, 350), text_input="Avanzado", additional_image=hardimg,
+        hardbutton = Button(image=button_surface, pos=(600, 350), text_input=textos[current_leng]["Avanzado"], additional_image=hardimg,
                              font=buttonfont, base_color=BLANCO, hovering_color=AMARILLO)
-        diffback_button = Button(image=button_surface, pos=(600, 450), text_input="Regresar", additional_image=backimg,
+        diffback_button = Button(image=button_surface, pos=(600, 450), text_input=textos[current_leng]["Regresar"], additional_image=backimg,
                                   font=buttonfont, base_color=BLANCO, hovering_color=AMARILLO)
         controlbutton = Button(image=buttonctl, pos=(100, 500), text_input="",
                                font=buttonfont, base_color=BLANCO, hovering_color=AMARILLO)
@@ -359,7 +378,7 @@ def diffscreen():
                 if diffback_button.checkForInput(DIFF_MOUSE_POS):
                     menu()
                 if controlbutton.checkForInput(DIFF_MOUSE_POS):
-                    ctlscreen()
+                    ctlscreen(diffscreen)
 
         pygame.display.update()
 
@@ -374,15 +393,16 @@ def easyscreen():
     while True:
         EASY_MOUSE_POS = pygame.mouse.get_pos()
         screen.blit(background, (x, y))
+        levelstext = titlefont.render(textos[current_leng]["Niveles"], True, LIGHT_BLUE)
         screen.blit(levelstext, (435, 30))
 
-        onelevel = Button(image=button_surface, pos=(600, 210), text_input="Nivel 1", additional_image=easyone,
+        onelevel = Button(image=button_surface, pos=(600, 210), text_input=textos[current_leng]["Nivel 1"], additional_image=easyone,
                               font=buttonfont, base_color=BLANCO, hovering_color=NAVY_BLUE)
-        twolevel = Button(image=button_surface, pos=(600,310), text_input="Nivel 2",  additional_image=easytwo,
+        twolevel = Button(image=button_surface, pos=(600,310), text_input=textos[current_leng]["Nivel 2"],  additional_image=easytwo,
                               font=buttonfont, base_color=BLANCO, hovering_color=NAVY_BLUE)
-        threelevel = Button(image=button_surface, pos=(600,410), text_input="Nivel 3", additional_image=easythree,
+        threelevel = Button(image=button_surface, pos=(600,410), text_input=textos[current_leng]["Nivel 3"], additional_image=easythree,
                                 font=buttonfont, base_color=BLANCO, hovering_color=NAVY_BLUE)
-        levelback_button = Button(image=button_surface, pos=(600, 510), text_input="Regresar", additional_image=backimg,
+        levelback_button = Button(image=button_surface, pos=(600, 510), text_input=textos[current_leng]["Regresar"], additional_image=backimg,
                                   font=buttonfont, base_color=BLANCO, hovering_color=NAVY_BLUE)
         controlbutton = Button(image=buttonctl, pos=(100, 510), text_input="",
                                font=buttonfont, base_color=BLANCO, hovering_color=NAVY_BLUE)
@@ -397,15 +417,15 @@ def easyscreen():
                 sys.exit()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if onelevel.checkForInput(EASY_MOUSE_POS):
-                    easy1()
+                    seleccionN1F()
                 if twolevel.checkForInput(EASY_MOUSE_POS):
-                    easy2()
+                    seleccionN2F()
                 if threelevel.checkForInput(EASY_MOUSE_POS):
-                    easy3()
+                    seleccionN3F()
                 if levelback_button.checkForInput(EASY_MOUSE_POS):
                     diffscreen()
                 if controlbutton.checkForInput(EASY_MOUSE_POS):
-                    print("control")
+                    ctlscreen(easyscreen)
 
         pygame.display.update()
 
@@ -419,15 +439,16 @@ def  hardscreen():
     while True:
         HARD_MOUSE_POS = pygame.mouse.get_pos()
         screen.blit(background, (x,y))
+        levelstext = titlefont.render(textos[current_leng]["Niveles"], True, LIGHT_BLUE)
         screen.blit(levelstext, (435, 30))
 
-        onelevel = Button(image=button_surface, pos=(600, 210), text_input="Nivel 1", additional_image=hardone,
+        onelevel = Button(image=button_surface, pos=(600, 210), text_input=textos[current_leng]["Nivel 1"], additional_image=hardone,
                               font=buttonfont, base_color=BLANCO, hovering_color=NAVY_BLUE)
-        twolevel = Button(image=button_surface, pos=(600,310), text_input="Nivel 2", additional_image=hardtwo,
+        twolevel = Button(image=button_surface, pos=(600,310), text_input=textos[current_leng]["Nivel 2"], additional_image=hardtwo,
                               font=buttonfont, base_color=BLANCO, hovering_color=NAVY_BLUE)
-        threelevel = Button(image=button_surface, pos=(600,410), text_input="Nivel 3", additional_image=hardthree,
+        threelevel = Button(image=button_surface, pos=(600,410), text_input=textos[current_leng]["Nivel 3"], additional_image=hardthree,
                                 font=buttonfont, base_color=BLANCO, hovering_color=NAVY_BLUE)
-        levelback_button = Button(image=button_surface, pos=(600, 510), text_input="Regresar", additional_image=backimg,
+        levelback_button = Button(image=button_surface, pos=(600, 510), text_input=textos[current_leng]["Regresar"], additional_image=backimg,
                                   font=buttonfont, base_color=BLANCO, hovering_color=NAVY_BLUE)
         controlbutton = Button(image=buttonctl, pos=(100, 510), text_input="",
                                font=buttonfont, base_color=BLANCO, hovering_color=NAVY_BLUE)
@@ -441,15 +462,15 @@ def  hardscreen():
                 sys.exit()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if onelevel.checkForInput(HARD_MOUSE_POS):
-                    hard1()
+                    seleccionN1D()
                 if twolevel.checkForInput(HARD_MOUSE_POS):
-                    hard2()
+                    seleccionN2D()
                 if threelevel.checkForInput(HARD_MOUSE_POS):
-                    hard3()
+                    seleccionN3D()
                 if levelback_button.checkForInput(HARD_MOUSE_POS):
                     diffscreen()
                 if controlbutton.checkForInput(HARD_MOUSE_POS):
-                    print("control")
+                    ctlscreen(hardscreen)
 
         pygame.display.update()
 
@@ -472,7 +493,7 @@ def menu():
                 if lenguagebutton.checkForInput(MENU_MOUSE_POS):
                     lenscreen()
                 if controlbutton.checkForInput(MENU_MOUSE_POS):
-                    ctlscreen()
+                    ctlscreen(menu)
                 if quitbutton.checkForInput(MENU_MOUSE_POS):
                     pygame.quit()
                     sys.exit()
